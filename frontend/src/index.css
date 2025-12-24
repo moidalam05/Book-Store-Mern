@@ -1,0 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-primary: #ffce1a;
+  --color-secondary: #0d0842;
+  --color-background: #f3f3f3;
+  --color-favorite: #ff5841;
+
+  /* font-family */
+  --font-primary: "Montserrat", "Nunito Sans", sans-serif;
+  --font-secondary: "Nunito Sans", "Montserrat", sans-serif;
+}
+
+/* Base */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Components */
+@layer components {
+  .swiper-button-next {
+    @apply bg-white p-5 rounded-full z-50 shadow-md;
+  }
+
+  .btn-primary {
+    @apply bg-primary  px-12 py-2 rounded-md text-base font-secondary font-bold hover:bg-secondary hover:text-white transition-all duration-200 cursor-pointer;
+  }
+}
