@@ -14,7 +14,9 @@ const app = express();
 // Cors middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5174",
+    origin:
+      process.env.FRONTEND_URL ||
+      "https://book-store-mern-git-main-moid786s-projects.vercel.app",
     credentials: true,
   })
 );
