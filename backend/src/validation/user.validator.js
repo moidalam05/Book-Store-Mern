@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 
 export const createUserValidator = [
   // Name
@@ -80,4 +80,9 @@ export const loginValidator = [
     .withMessage("Password is required")
     .isLength({ min: 8, max: 20 })
     .withMessage("Password must be between 8 and 20 characters"),
+];
+
+export const userIdParamsValidator = [
+  // User ID in params
+  param("userId").isMongoId().withMessage("Invalid User ID"),
 ];

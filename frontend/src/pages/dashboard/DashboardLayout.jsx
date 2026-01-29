@@ -1,265 +1,583 @@
-import { Link, Outlet } from "react-router-dom";
-import { HiViewGridAdd } from "react-icons/hi";
-import { MdOutlineManageHistory } from "react-icons/md";
+import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { FaUserPen } from "react-icons/fa6";
+import Loading from "../../components/Loading.jsx";
+import { useAuth } from "../../context/AuthContext";
+import { useState, useEffect } from "react";
+import {
+  BsChevronLeft,
+  BsChevronRight,
+  BsSearch,
+  BsGrid,
+  BsBook,
+  BsList,
+  BsBox,
+  BsPerson,
+  BsBell,
+  BsGear,
+  BsFolder2Open,
+  BsChevronDown,
+  BsChevronUp,
+  BsPlus,
+  BsTag,
+  BsPersonCircle,
+  BsPencilSquare,
+  BsPeople,
+  BsShieldLock,
+  BsHouse,
+  BsGraphUp,
+  BsFileText,
+  BsTicket,
+  BsListUl,
+} from "react-icons/bs";
+import { useLogoutUserMutation } from "../../app/features/auth/authApi.js";
 
 const DashboardLayout = () => {
-  const handleLogout = () => {};
+  const [logoutUser, { isLoading }] = useLogoutUserMutation();
+  const { setCurrentUser, currentUser } = useAuth();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const [openSubmenus, setOpenSubmenus] = useState({
+    manageBooks: false,
+    manageCategory: false,
+  });
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  // Main navigation items
+  const navigation = [
+    {
+      name: "Dashboard",
+      icon: <BsGrid className="w-5 h-5" />,
+      active:
+        pathname === "/dashboard" ||
+        pathname === "/dashboard/analytics" ||
+        pathname === "/dashboard/reports",
+      type: "submenu",
+      key: "dashboard",
+      items: [
+        {
+          name: "Overview",
+          href: "/dashboard",
+          icon: <BsHouse className="w-4 h-4" />,
+          active: pathname === "/dashboard",
+        },
+      ],
+    },
+    {
+      name: "Manage Books",
+      icon: <BsList className="w-5 h-5" />,
+      active: pathname.startsWith("/dashboard/manage"),
+      type: "submenu",
+      key: "manageBooks",
+      items: [
+        {
+          name: "All Books",
+          href: "/dashboard/manage-books",
+          icon: <BsBook className="w-4 h-4" />,
+          active: pathname === "/dashboard/manage-books",
+        },
+        {
+          name: "Add New",
+          href: "/dashboard/manage-books/add",
+          icon: <BsPlus className="w-4 h-4" />,
+          active: pathname === "/dashboard/manage-books/add",
+        },
+      ],
+    },
+    // Add this to your navigation array after "Orders" item:
+    {
+      name: "Manage Orders",
+      icon: <BsBox className="w-5 h-5" />,
+      active: pathname.startsWith("/dashboard/orders"),
+      type: "submenu",
+      key: "ordersManagement",
+      items: [
+        {
+          name: "All Orders",
+          href: "/dashboard/orders",
+          icon: <BsBox className="w-4 h-4" />,
+          active: pathname === "/dashboard/orders",
+        },
+      ],
+    },
+    {
+      name: "Manage Category",
+      icon: <BsFolder2Open className="w-5 h-5" />,
+      active: pathname.startsWith("/dashboard/category"),
+      type: "submenu",
+      key: "manageCategory",
+      items: [
+        {
+          name: "All Categories",
+          href: "/dashboard/category",
+          icon: <BsTag className="w-4 h-4" />,
+          active: pathname === "/dashboard/category",
+        },
+        {
+          name: "Add Category",
+          href: "/dashboard/category/add",
+          icon: <BsPlus className="w-4 h-4" />,
+          active: pathname === "/dashboard/category/add",
+        },
+      ],
+    },
+
+    {
+      name: "Manage Coupons",
+      icon: <BsTicket className="w-5 h-5" />,
+      active: pathname.startsWith("/dashboard/coupon"),
+      type: "submenu",
+      key: "manageCoupons",
+      items: [
+        {
+          name: "All Coupons",
+          href: "/dashboard/coupon",
+          icon: <BsListUl className="w-4 h-4" />,
+          active: pathname === "/dashboard/coupon",
+        },
+        {
+          name: "Add Coupon",
+          href: "/dashboard/coupon/add",
+          icon: <BsPlus className="w-4 h-4" />,
+          active: pathname === "/dashboard/coupon/add",
+        },
+      ],
+    },
+
+    // Add this to your navigation array:
+    {
+      name: "Manage Profile",
+      icon: <BsPerson className="w-5 h-5" />,
+      active:
+        pathname.startsWith("/dashboard/profile") ||
+        pathname.startsWith("/dashboard/admin") ||
+        pathname.startsWith("/dashboard/settings"),
+      type: "submenu",
+      key: "profileManagement",
+      items: [
+        {
+          name: "My Profile",
+          href: "/dashboard/profile",
+          icon: <BsPersonCircle className="w-4 h-4" />,
+          active: pathname === "/dashboard/profile",
+        },
+
+        {
+          name: "Create Admin",
+          href: "/dashboard/create-admin",
+          icon: <FaUserPen className="w-4 h-4" />,
+          active: pathname === "/dashboard/create-admin",
+        },
+        {
+          name: "All Users",
+          href: "/dashboard/all-users",
+          icon: <BsPeople className="w-4 h-4" />,
+          active: pathname === "/dashboard/all-users",
+        },
+      ],
+    },
+  ];
+
+  const userMenu = [
+    { name: "Dashboard", href: "/dashboard" },
+    { name: "Profile", href: "/dashboard/profile" },
+    { name: "Edit Profile", href: "/dashboard/edit-profile" },
+    { name: "Settings", href: "/dashboard/settings" },
+  ];
+
+  const handleLogout = async () => {
+    try {
+      const response = await logoutUser().unwrap();
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      setCurrentUser(null);
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
+  // Toggle submenu
+  const toggleSubmenu = (key) => {
+    setOpenSubmenus((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Close mobile sidebar on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMobileSidebarOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Auto-open submenu if active
+  useEffect(() => {
+    if (pathname.startsWith("/dashboard/manage")) {
+      setOpenSubmenus((prev) => ({ ...prev, manageBooks: true }));
+    }
+    if (pathname.startsWith("/dashboard/category")) {
+      setOpenSubmenus((prev) => ({ ...prev, manageCategory: true }));
+    }
+  }, [pathname]);
+
+  if (isLoading) return <Loading />;
 
   return (
-    <section className="flex md:bg-gray-100 min-h-screen overflow-hidden">
-      <aside className="hidden sm:flex sm:flex-col">
-        <a
-          href="/"
-          className="inline-flex items-center justify-center h-20 w-20 bg-purple-600 hover:bg-purple-500 focus:bg-purple-500"
-        >
-          <img src="/fav-icon.png" alt="" />
-        </a>
-        <div className="grow flex flex-col justify-between text-gray-500 bg-gray-800">
-          <nav className="flex flex-col mx-4 my-6 space-y-4">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center py-3 hover:text-gray-400 hover:bg-gray-700 focus:text-gray-400 focus:bg-gray-700 rounded-lg"
+    <div className="min-h-screen bg-linear-to-br from-gray-50 to-blue-50/20">
+      {/* Mobile Sidebar Overlay */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-40
+        bg-white shadow-xl border-r border-gray-200
+        transition-all duration-300
+        ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        ${isSidebarOpen ? "w-64" : "w-20"}
+      `}
+      >
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between h-20 px-4 border-b border-gray-200">
+          <div
+            className={`flex items-center space-x-3 ${isSidebarOpen ? "lg:flex" : "hidden lg:flex"}`}
+          >
+            <div className="w-10 h-10 bg-linear-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-xl">B</span>
+            </div>
+            <div className={`${isSidebarOpen ? "lg:block" : "lg:hidden"}`}>
+              <h2 className="text-gray-900 font-bold text-lg">BookStore</h2>
+              <p className="text-gray-500 text-xs">Admin Panel</p>
+            </div>
+          </div>
+
+          {/* Toggle Button - Desktop */}
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="hidden lg:flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            {isSidebarOpen ? <BsChevronLeft /> : <BsChevronRight />}
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-6 px-4">
+          <div className="space-y-1">
+            {navigation.map((item) => {
+              if (item.type === "link") {
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setIsMobileSidebarOpen(false)}
+                    className={`
+                      flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200
+                      ${
+                        item.active
+                          ? "bg-linear-to-r from-indigo-50 to-purple-50 text-indigo-700 border-l-4 border-indigo-500"
+                          : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                      }
+                    `}
+                  >
+                    <span
+                      className={`${item.active ? "text-indigo-600" : "text-gray-500"}`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span
+                      className={`font-medium ${isSidebarOpen ? "lg:inline" : "lg:hidden"}`}
+                    >
+                      {item.name}
+                    </span>
+                    {item.active && (
+                      <span className="ml-auto w-2 h-2 bg-indigo-500 rounded-full"></span>
+                    )}
+                  </Link>
+                );
+              }
+
+              // Submenu item
+              if (item.type === "submenu") {
+                const isOpen = openSubmenus[item.key];
+                const ChevronIcon = isOpen ? BsChevronUp : BsChevronDown;
+
+                return (
+                  <div key={item.name} className="space-y-1">
+                    <button
+                      onClick={() => toggleSubmenu(item.key)}
+                      className={`
+                        w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200
+                        ${
+                          item.active
+                            ? "bg-linear-to-r from-indigo-50 to-purple-50 text-indigo-700 border-l-4 border-indigo-500"
+                            : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                        }
+                      `}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`${item.active ? "text-indigo-600" : "text-gray-500"}`}
+                        >
+                          {item.icon}
+                        </span>
+                        <span
+                          className={`font-medium text-left ${isSidebarOpen ? "lg:inline" : "lg:hidden"}`}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+                      <ChevronIcon
+                        className={`w-3 h-3 transition-transform ${isSidebarOpen ? "lg:inline" : "lg:hidden"} ${
+                          item.active ? "text-indigo-600" : "text-gray-500"
+                        }`}
+                      />
+                    </button>
+
+                    {/* Submenu Items */}
+                    {isOpen && (
+                      <div className="ml-6 pl-4 border-l border-gray-200 space-y-1">
+                        {item.items.map((subItem) => (
+                          <Link
+                            key={subItem.name}
+                            to={subItem.href}
+                            onClick={() => setIsMobileSidebarOpen(false)}
+                            className={`
+                              flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200
+                              ${
+                                subItem.active
+                                  ? "bg-indigo-50 text-indigo-600"
+                                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                              }
+                            `}
+                          >
+                            <span
+                              className={`${subItem.active ? "text-indigo-500" : "text-gray-400"}`}
+                            >
+                              {subItem.icon}
+                            </span>
+                            <span
+                              className={`text-sm font-medium ${isSidebarOpen ? "lg:inline" : "lg:hidden"}`}
+                            >
+                              {subItem.name}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+            })}
+          </div>
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="border-t border-gray-200 p-4">
+          <div
+            className={`flex items-center space-x-3 ${isSidebarOpen ? "lg:flex" : "lg:justify-center"}`}
+          >
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-indigo-200">
+              <img
+                src={
+                  currentUser?.avatar?.url || "https://via.placeholder.com/40"
+                }
+                alt="User"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className={`${isSidebarOpen ? "lg:block" : "lg:hidden"}`}>
+              <p className="text-gray-900 font-medium text-sm">
+                {currentUser?.name}
+              </p>
+              <p className="text-gray-500 text-xs truncate">
+                {currentUser?.email}
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className={`ml-auto text-gray-500 hover:text-gray-700 ${isSidebarOpen ? "lg:block" : "lg:hidden"}`}
+              title="Logout"
             >
-              <span className="sr-only">Folders</span>
               <svg
-                aria-hidden="true"
+                className="w-5 h-5"
                 fill="none"
-                viewBox="0 0 24 24"
                 stroke="currentColor"
-                className="h-6 w-6"
+                viewBox="0 0 24 24"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                />
-              </svg>
-            </a>
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center justify-center py-3 text-purple-600 bg-white rounded-lg"
-            >
-              <span className="sr-only">Dashboard</span>
-              <svg
-                aria-hidden="true"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="h-6 w-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-            </Link>
-            <Link
-              to="/dashboard/add-new-book"
-              className="inline-flex items-center justify-center py-3 hover:text-gray-400 hover:bg-gray-700 focus:text-gray-400 focus:bg-gray-700 rounded-lg"
-            >
-              <span className="sr-only">Add Book</span>
-              <HiViewGridAdd className="h-6 w-6" />
-            </Link>
-            <Link
-              to="/dashboard/manage-books"
-              className="inline-flex items-center justify-center py-3 hover:text-gray-400 hover:bg-gray-700 focus:text-gray-400 focus:bg-gray-700 rounded-lg"
-            >
-              <span className="sr-only">Documents</span>
-              <MdOutlineManageHistory className="h-6 w-6" />
-            </Link>
-          </nav>
-          <div className="inline-flex items-center justify-center h-20 w-20 border-t border-gray-700">
-            <button className="p-3 hover:text-gray-400 hover:bg-gray-700 focus:text-gray-400 focus:bg-gray-700 rounded-lg">
-              <span className="sr-only">Settings</span>
-              <svg
-                aria-hidden="true"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                className="h-6 w-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 />
               </svg>
             </button>
           </div>
         </div>
       </aside>
-      <div className="grow text-gray-800">
-        <header className="flex items-center h-20 px-6 sm:px-10 bg-white">
-          <button className="block sm:hidden relative shrink-0 p-2 mr-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800 focus:bg-gray-100 focus:text-gray-800 rounded-full">
-            <span className="sr-only">Menu</span>
-            <svg
-              aria-hidden="true"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 6h16M4 12h16M4 18h7"
-              />
-            </svg>
-          </button>
-          <div className="relative w-full max-w-md sm:-ml-2">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="absolute h-6 w-6 mt-2.5 ml-2 text-gray-400"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <input
-              type="text"
-              role="search"
-              placeholder="Search..."
-              className="py-2 pl-10 pr-4 w-full border-4 border-transparent placeholder-gray-400 focus:bg-gray-50 rounded-lg"
-            />
-          </div>
-          <div className="flex shrink-0 items-center ml-auto">
-            <button className="inline-flex items-center p-2 hover:bg-gray-100 focus:bg-gray-100 rounded-lg">
-              <span className="sr-only">User Menu</span>
-              <div className="hidden md:flex md:flex-col md:items-end md:leading-tight">
-                <span className="font-semibold">Grace Simmons</span>
-                <span className="text-sm text-gray-600">Lecturer</span>
-              </div>
-              <span className="h-12 w-12 ml-2 sm:ml-3 mr-2 bg-gray-100 rounded-full overflow-hidden">
-                <img
-                  src="https://randomuser.me/api/portraits/women/68.jpg"
-                  alt="user profile photo"
-                  className="h-full w-full object-cover"
-                />
-              </span>
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="hidden sm:block h-6 w-6 text-gray-300"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-            <div className="border-l pl-3 ml-3 space-x-1">
-              <button className="relative p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:bg-gray-100 focus:text-gray-600 rounded-full">
-                <span className="sr-only">Notifications</span>
-                <span className="absolute top-0 right-0 h-2 w-2 mt-1 mr-2 bg-red-500 rounded-full"></span>
-                <span className="absolute top-0 right-0 h-2 w-2 mt-1 mr-2 bg-red-500 rounded-full animate-ping"></span>
-                <svg
-                  aria-hidden="true"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="h-6 w-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
-              </button>
+
+      {/* Main Content */}
+      <div
+        className={`
+        flex-1 transition-all duration-300
+        ${isSidebarOpen ? "md:ml-20 lg:ml-64" : "md:ml-20"}
+      `}
+      >
+        {/* Top Navigation */}
+        <header className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm h-20">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-4">
+            {/* Left Section */}
+            <div className="flex items-center w-full md:max-w-2xl space-x-4">
+              {/* Mobile Menu Button */}
               <button
-                onClick={handleLogout}
-                className="relative p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:bg-gray-100 focus:text-gray-600 rounded-full"
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               >
-                <span className="sr-only">Log out</span>
                 <svg
-                  aria-hidden="true"
+                  className="w-6 h-6"
                   fill="none"
-                  viewBox="0 0 24 24"
                   stroke="currentColor"
-                  className="h-6 w-6"
+                  viewBox="0 0 24 24"
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
                   />
                 </svg>
               </button>
+
+              {/* Search Bar */}
+              <div className="relative w-full">
+                <BsSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search books, orders, users..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-gray-900 bg-white"
+                />
+              </div>
+            </div>
+
+            {/* Right Section */}
+            <div className="flex items-center space-x-4">
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <BsBell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+
+              {/* Settings */}
+              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <BsGear className="w-5 h-5" />
+              </button>
+
+              {/* User Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-200">
+                    <img
+                      src={
+                        currentUser?.avatar?.url ||
+                        "https://via.placeholder.com/36"
+                      }
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      {currentUser?.name}
+                    </p>
+                    <p className="text-xs text-gray-500">Admin</p>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-20 overflow-hidden">
+                      <div className="p-4 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">
+                          {currentUser?.name}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {currentUser?.email}
+                        </p>
+                      </div>
+                      <div className="py-1">
+                        {userMenu.map((item) => (
+                          <Link
+                            key={item.name}
+                            to={item.href}
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </div>
+                      <div className="border-t border-gray-100 py-1">
+                        <button
+                          onClick={() => {
+                            setIsDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </header>
-        <main className="p-6 sm:p-10 space-y-6 ">
-          <div className="flex flex-col space-y-6 md:space-y-0 md:flex-row justify-between">
-            <div className="mr-6">
-              <h1 className="text-4xl font-semibold mb-2">Dashboard</h1>
-              <h2 className="text-gray-600 ml-0.5">Book Store Inventory</h2>
-            </div>
-            <div className="flex flex-col md:flex-row items-start justify-end -mb-3">
-              <Link
-                to="/dashboard/manage-books"
-                className="inline-flex px-5 py-3 text-purple-600 hover:text-purple-700 focus:text-purple-700 hover:bg-purple-100 focus:bg-purple-100 border border-purple-600 rounded-md mb-3"
-              >
-                <svg
-                  aria-hidden="true"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="shrink-0 h-5 w-5 -ml-1 mt-0.5 mr-2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                  />
-                </svg>
-                Manage Books
-              </Link>
-              <Link
-                to="/dashboard/add-new-book"
-                className="inline-flex px-5 py-3 text-white bg-purple-600 hover:bg-purple-700 focus:bg-purple-700 rounded-md ml-6 mb-3"
-              >
-                <svg
-                  aria-hidden="true"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="shrink-0 h-6 w-6 text-white -ml-1 mr-2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                Add New Book
-              </Link>
-            </div>
-          </div>
+
+        {/* Main Content Area */}
+        <main className="p-4 sm:p-6">
           <Outlet />
         </main>
       </div>
-    </section>
+    </div>
   );
 };
 

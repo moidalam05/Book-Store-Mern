@@ -1,72 +1,103 @@
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth } from "../firebase/firebase.config.js";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { auth } from "../firebase/firebase.config";
+import { getBaseUrl } from "../utils/baseUrl.js";
 
 const AuthContext = createContext();
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 const googleProvider = new GoogleAuthProvider();
 
-// auth provider
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // register a user
-  const registerUser = async (email, password) => {
-    return await createUserWithEmailAndPassword(auth, email, password);
-  };
-
-  // login a user
-  const loginUser = async (email, password) => {
-    return await signInWithEmailAndPassword(auth, email, password);
-  };
-
-  // signup with google
-  const signInWithGoogle = async () => {
-    return await signInWithPopup(auth, googleProvider);
-  };
-
-  // logout user
-  const logout = () => {
-    return signOut(auth);
-  };
-
-  // Manage users
+  // 🔁 Restore user on refresh
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setLoading(false);
+    const token = localStorage.getItem("token");
 
-      if (user) {
-        const { email, displayName, photoURL } = user;
-        const userData = {
-          email,
-          username: displayName,
-          photo: photoURL,
-        };
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchMe = async () => {
+      try {
+        const res = await fetch(`${getBaseUrl()}/api/v1/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Unauthorized");
+        }
+
+        const data = await res.json();
+
+        setCurrentUser({
+          ...data.user,
+          token,
+        });
+      } catch (err) {
+        localStorage.removeItem("token");
+        setCurrentUser(null);
+      } finally {
+        setLoading(false);
       }
-    });
-    return () => unsubscribe();
+    };
+
+    fetchMe();
   }, []);
 
-  const value = {
-    currentUser,
-    registerUser,
-    loginUser,
-    signInWithGoogle,
-    logout,
-    loading,
+  // 🔐 Google Login
+  const signInWithGoogle = async () => {
+    const result = await signInWithPopup(auth, googleProvider);
+
+    const res = await fetch(`${getBaseUrl()}/api/v1/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: result.user.email,
+        name: result.user.displayName,
+        avatar: result.user.photoURL,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "Google login failed");
+    }
+
+    localStorage.setItem("token", data.token);
+
+    setCurrentUser({
+      ...data.user,
+      token: data.token,
+    });
+
+    return data;
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // 🚪 Logout
+  const logout = async () => {
+    localStorage.removeItem("token");
+    setCurrentUser(null);
+    await signOut(auth);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        setCurrentUser,
+        signInWithGoogle,
+        logout,
+        loading,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

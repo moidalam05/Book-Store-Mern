@@ -1,29 +1,43 @@
 import { Router } from "express";
 import {
-  createAdmin,
-  createUser,
-  login,
-  logout,
+  getAllUsers,
+  getUserById,
+  profileStats,
+  updateProfile,
+  updateUserStatus,
 } from "../controllers/user.controller.js";
-import { createUserValidator } from "../validation/user.validator.js";
+import { userIdParamsValidator } from "../validation/user.validator.js";
 import runValidation from "../validation/validate.js";
 import { isAdmin, isAuthenticated } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.js";
 
 const router = Router();
 
-router.post(
-  "/admin/register",
+router.get("/all-users", isAuthenticated, isAdmin, getAllUsers);
+
+router.get("/profile-stats", isAuthenticated, profileStats);
+
+router.get(
+  "/:userId",
   isAuthenticated,
-  isAdmin,
-  createUserValidator,
+  userIdParamsValidator,
   runValidation,
-  createAdmin
+  getUserById,
 );
 
-router.post("/register", createUserValidator, runValidation, createUser);
+router.put(
+  "/update-profile/:userId",
+  isAuthenticated,
+  upload.single("avatar"),
+  updateProfile,
+);
 
-router.post("/login", login);
-
-router.post("/logout", isAuthenticated, logout);
+router.patch(
+  "/status/:userId",
+  isAuthenticated,
+  userIdParamsValidator,
+  runValidation,
+  updateUserStatus,
+);
 
 export default router;

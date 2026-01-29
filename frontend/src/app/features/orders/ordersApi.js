@@ -4,12 +4,16 @@ import { getBaseUrl } from "../../../utils/baseUrl.js";
 const baseQuery = fetchBaseQuery({
   baseUrl: `${getBaseUrl()}/api/v1/orders`,
   credentials: "include",
+  prepareHeaders: (headers) => {
+    const token = localStorage.getItem("token");
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    return headers;
+  },
 });
-
 export const ordersApi = createApi({
   reducerPath: "ordersApi",
   baseQuery,
-  tagTypes: ["Orders"],
+  tagTypes: ["Cart", "Orders", "Dashboard"],
   endpoints: (builder) => ({
     // ==================== CREATE ORDER ====================
     createOrder: builder.mutation({
@@ -21,67 +25,115 @@ export const ordersApi = createApi({
           "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: [{ type: "Orders", id: "LIST" }],
+      invalidatesTags: [
+        "Cart",
+        { type: "Orders", id: "LIST" },
+        { type: "Dashboard", id: "LIST" },
+      ],
     }),
 
-    // ==================== FETCH ALL ORDERS ====================
-    getAllOrders: builder.query({
-      query: () => "/",
-      providesTags: (result) =>
-        result?.data
-          ? [
-              ...result.data.map((order) => ({
-                type: "Orders",
-                id: order._id,
-              })),
-              { type: "Orders", id: "LIST" },
-            ]
-          : [{ type: "Orders", id: "LIST" }],
-    }),
-
-    // ==================== FETCH ORDER BY ID ====================
-    getOrderById: builder.query({
-      query: (id) => `/${id}`,
-      providesTags: (result, error, id) => [{ type: "Orders", id }],
-    }),
-
-    // ==================== FETCH ORDER BY ID ====================
-    getAllOrdersByUserEmail: builder.query({
-      query: (email) => `/email/${email}`,
-      providesTags: (result) =>
-        result?.data
-          ? [
-              ...result.data.map((order) => ({
-                type: "Orders",
-                id: order._id,
-              })),
-              { type: "Orders", id: "LIST" },
-            ]
-          : [{ type: "Orders", id: "LIST" }],
-    }),
-
-    // ==================== UPDATE ORDER STATUS ====================
-    updateOrderStatus: builder.mutation({
-      query: ({ id, ...updatedOrder }) => ({
-        url: `/${id}`,
-        method: "PATCH",
-        body: updatedOrder,
+    // ==================== VERIFY PAYMENT ====================
+    verifyPayment: builder.mutation({
+      query: (paymentData) => ({
+        url: "/verify-payment",
+        method: "POST",
+        body: paymentData,
         headers: {
           "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: (result, error, { id }) => [
-        { type: "Orders", id },
+      invalidatesTags: [
+        "Cart",
         { type: "Orders", id: "LIST" },
+        { type: "Dashboard", id: "LIST" },
       ],
+    }),
+
+    // ==================== VERIFY ORDER ====================
+    verifyOrder: builder.mutation({
+      query: (orderId) => ({
+        url: `/verify/${orderId}`,
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: [
+        { type: "Orders", id: "LIST" },
+        { type: "Dashboard", id: "LIST" },
+      ],
+    }),
+
+    // ==================== GET ALL ORDERS (USER) ====================
+    getMyOrders: builder.query({
+      query: (params = {}) => ({
+        url: "/my-orders",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["Orders"],
+    }),
+
+    // ==================== GET ORDERS BY ID (USER) ====================
+    getMyOrderById: builder.query({
+      query: (orderId) => ({
+        url: `/my-orders/${orderId}`,
+        method: "GET",
+      }),
+      providesTags: ["Orders"],
+    }),
+
+    // ==================== CANCEL ORDER (USER) ====================
+    cancelOrder: builder.mutation({
+      query: (orderId) => ({
+        url: `/cancel/${orderId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Orders"],
+    }),
+
+    // ==================== GET ALL ORDERS (ADMIN) ====================
+    getAllOrders: builder.query({
+      query: (params = {}) => ({
+        url: "/",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["Orders"],
+    }),
+
+    // ==================== UPDATE ORDER STATUS (ADMIN) ====================
+    updateOrderStatus: builder.mutation({
+      query: ({ orderId, orderStatus }) => ({
+        url: `/${orderId}`,
+        method: "PATCH",
+        body: { orderStatus },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+      invalidatesTags: ["Orders", { type: "Dashboard", id: "LIST" }],
+    }),
+
+    // ==================== GET ORDERS BY ID (ADMIN) ====================
+    getOrderById: builder.query({
+      query: (orderId) => ({
+        url: `/${orderId}`,
+        method: "GET",
+      }),
+      providesTags: ["Orders"],
     }),
   }),
 });
 
 export const {
   useCreateOrderMutation,
+  useVerifyPaymentMutation,
+  useVerifyOrderMutation,
+  useGetMyOrdersQuery,
+  useGetMyOrderByIdQuery,
+  useCancelOrderMutation,
   useGetAllOrdersQuery,
-  useGetOrderByIdQuery,
-  useGetAllOrdersByUserEmailQuery,
   useUpdateOrderStatusMutation,
+  useGetOrderByIdQuery,
 } = ordersApi;

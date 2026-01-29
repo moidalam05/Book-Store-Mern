@@ -2,69 +2,88 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getBaseUrl } from "../../../utils/baseUrl.js";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${getBaseUrl()}/api/v1/auth`,
+  baseUrl: `${getBaseUrl()}/api/v1/users`,
   credentials: "include",
+  prepareHeaders: (Headers) => {
+    const token = localStorage.getItem("token");
+    if (token) Headers.set("Authorization", `Bearer ${token}`);
+    return Headers;
+  },
 });
 
 export const usersApi = createApi({
   reducerPath: "usersApi",
   baseQuery,
-  tagTypes: ["Users"],
+  tagTypes: ["Users", "Dashboard"],
   endpoints: (builder) => ({
-    // ==================== CREATE USER ====================
-    createUser: builder.mutation({
-      query: (newUser) => ({
-        url: "/register",
-        method: "POST",
-        body: newUser,
-        headers: {
-          "Content-Type": "application/json",
-        },
+    updateProfile: builder.mutation({
+      query: ({ formData, userId }) => ({
+        url: `/update-profile/${userId}`,
+        method: "PUT",
+        body: formData,
       }),
-      invalidatesTags: [{ type: "Users", id: "LIST" }],
+      invalidatesTags: (result) => {
+        const id = result?.data?._id || result?.user?._id;
+        return [
+          { type: "Users", id: "LIST" },
+          { type: "Dashboard", id: "LIST" },
+          ...(id ? [{ type: "Users", id }] : []),
+        ];
+      },
     }),
 
-    // ==================== CREATE ADMIN ====================
-    createAdmin: builder.mutation({
-      query: (newAdmin) => ({
-        url: "/admin/register",
-        method: "POST",
-        body: newAdmin,
-        headers: {
-          "Content-Type": "application/json",
-        },
+    fetchUsers: builder.query({
+      query: (params) => ({
+        url: "/all-users",
+        method: "GET",
+        params,
       }),
-      invalidatesTags: [{ type: "Users", id: "LIST" }],
+      providesTags: [
+        { type: "Users", id: "LIST" },
+        { type: "Dashboard", id: "LIST" },
+      ],
     }),
 
-    // ==================== LOGIN USER ====================
-    loginUser: builder.mutation({
-      query: (user) => ({
-        url: "/login",
-        method: "POST",
-        body: user,
-        headers: {
-          "Content-Type": "application/json",
-        },
+    fetchUserById: builder.query({
+      query: (userId) => ({
+        url: `/${userId}`,
+        method: "GET",
       }),
+      providesTags: (result, error, userId) => [
+        { type: "Users", id: userId },
+        { type: "Dashboard", id: "LIST" },
+      ],
     }),
 
-    // ==================== LOGOUT USER ====================
-    logoutUser: builder.mutation({
+    toggleUserStatus: builder.mutation({
+      query: (userId) => ({
+        url: `/status/${userId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (result, error, userId) => [
+        { type: "Users", id: "LIST" },
+        { type: "Dashboard", id: "LIST" },
+        { type: "Users", id: userId },
+      ],
+    }),
+
+    getProfileStats: builder.query({
       query: () => ({
-        url: "/logout",
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        url: "/profile-stats",
+        method: "GET",
+        providesTags: [
+          { type: "Dashboard", id: "LIST" },
+          { type: "Users", id: "LIST" },
+        ],
       }),
     }),
   }),
 });
 
 export const {
-  useCreateUserMutation,
-  useCreateAdminMutation,
-  useLoginUserMutation,
-  useLogoutUserMutation,
+  useUpdateProfileMutation,
+  useFetchUsersQuery,
+  useFetchUserByIdQuery,
+  useToggleUserStatusMutation,
+  useGetProfileStatsQuery,
 } = usersApi;

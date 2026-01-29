@@ -1,3 +1,3 @@
-export const getBaseUrl = ()=>{
-    return "https://book-store-mern-er5y.onrender.com"
-}
+export const getBaseUrl = () => {
+  return "http://localhost:5000";
+};

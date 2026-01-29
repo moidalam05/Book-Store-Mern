@@ -2,51 +2,160 @@ import mongoose from "mongoose";
 
 const bookSchema = new mongoose.Schema(
   {
+    // ================= BASIC INFO =================
     title: {
       type: String,
       required: true,
       trim: true,
-      minLength: [3, "Title must be at least 3 characters"],
-      maxLength: [100, "Title must be less than 100 characters"],
+      minlength: [3, "Title must be at least 3 characters"],
+      maxlength: [150, "Title must be less than 150 characters"],
       index: true,
-      unique: true,
     },
+
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      index: true,
+    },
+
     description: {
       type: String,
       required: true,
       trim: true,
-      minLength: [30, "Description must be at least 30 characters"],
-      maxLength: [1000, "Description must be less than 1000 characters"],
+      minlength: [30, "Description must be at least 30 characters"],
+      maxlength: [2000, "Description must be less than 2000 characters"],
     },
-    category: {
+
+    // ================= AUTHOR & META =================
+    authors: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+
+    publisher: {
       type: String,
-      required: true,
       trim: true,
-      minLength: [3, "Category must be at least 3 characters"],
-      maxLength: [100, "Category must be less than 100 characters"],
     },
+
+    language: {
+      type: String,
+      default: "English",
+    },
+
+    isbn: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+
+    // ================= CATEGORY =================
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+      index: true,
+    },
+
+    tags: [
+      {
+        type: String,
+        lowercase: true,
+        trim: true,
+      },
+    ],
+
+    // ================= PRICING =================
+    price: {
+      original: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+      discounted: {
+        type: Number,
+        required: true,
+        min: 0,
+      },
+    },
+
+    // ================= INVENTORY =================
+    stock: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    isAvailable: {
+      type: Boolean,
+      default: true,
+    },
+
+    // ================= MEDIA =================
+    coverImage: {
+      url: {
+        type: String,
+        required: true,
+      },
+      publicId: {
+        type: String,
+      },
+    },
+
+    // ================= FLAGS =================
     trending: {
       type: Boolean,
       default: false,
     },
-    coverImage: {
-      type: String,
-      required: true,
-      default: "",
+
+    featured: {
+      type: Boolean,
+      default: false,
     },
-    oldPrice: {
-      type: Number,
-      required: true,
-      default: 0,
+
+    status: {
+      type: Boolean,
+      default: true,
     },
-    newPrice: {
+
+    ratings: {
+      average: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
+      },
+      count: {
+        type: Number,
+        default: 0,
+      },
+    },
+
+    soldCount: {
       type: Number,
-      required: true,
       default: 0,
     },
   },
-  { timestamps: true, versionKey: false }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
+
+bookSchema.index({
+  title: "text",
+  authors: "text",
+  isbn: "text",
+  tags: "text",
+  slug: "text",
+});
+
+bookSchema.pre("save", function () {
+  this.isAvailable = this.stock > 0;
+});
 
 const Book = mongoose.model("Book", bookSchema);
 export default Book;

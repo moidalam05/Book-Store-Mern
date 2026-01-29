@@ -18,7 +18,18 @@ export const booksApi = createApi({
   endpoints: (builder) => ({
     // ==================== FETCH ALL ====================
     fetchAllBooks: builder.query({
-      query: () => "/",
+      query: (params = {}) => {
+        const searchParams = new URLSearchParams();
+
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            searchParams.append(key, value);
+          }
+        });
+
+        return `/?${searchParams.toString()}`;
+      },
+
       providesTags: (result) =>
         result?.data
           ? [
@@ -43,6 +54,7 @@ export const booksApi = createApi({
         url: "/create-book",
         method: "POST",
         body: newBook,
+        credentials: "include",
       }),
       invalidatesTags: [{ type: "Books", id: "LIST" }],
     }),
@@ -51,10 +63,22 @@ export const booksApi = createApi({
     updateBook: builder.mutation({
       query: ({ id, ...updatedBook }) => ({
         url: `/edit/${id}`,
-        method: "PATCH",
+        method: "PUT",
         body: updatedBook,
       }),
       invalidatesTags: (result, error, { id }) => [
+        { type: "Books", id },
+        { type: "Books", id: "LIST" },
+      ],
+    }),
+
+    // ==================== UPDATE BOOK STATUS ====================
+    updateBookStatus: builder.mutation({
+      query: (id) => ({
+        url: `/${id}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (result, error, id) => [
         { type: "Books", id },
         { type: "Books", id: "LIST" },
       ],
@@ -80,4 +104,5 @@ export const {
   useCreateBookMutation,
   useUpdateBookMutation,
   useDeleteBookMutation,
+  useUpdateBookStatusMutation,
 } = booksApi;

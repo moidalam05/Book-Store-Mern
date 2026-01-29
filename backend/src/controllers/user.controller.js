@@ -1,176 +1,382 @@
 import User from "../models/user.model.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import Order from "../models/order.model.js";
+import Review from "../models/review.model.js";
+import {
+  uploadFileToCloudinary,
+  deleteFileFromCloudinary,
+} from "../config/fileUpload.js";
 
-export const createUser = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
-    const { name, email, username, password } = req.body;
+    const { userId } = req.params;
 
-    const userAlreadyExists = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
-    if (userAlreadyExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Email/username already exists",
-      });
-    }
-
-    const user = await User.create({
-      name,
-      email,
-      username,
-      password,
-      role: "user",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "User created successfully",
-      data: user,
-    });
-  } catch (error) {
-    console.error("Error while creating user:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create user",
-      error: error.message || "Internal Server Error",
-    });
-  }
-};
-
-export const createAdmin = async (req, res) => {
-  try {
-    const { name, email, username, password } = req.body;
-
-    const adminAlreadyExists = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
-    if (adminAlreadyExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Email/username already exists",
-      });
-    }
-
-    const admin = await User.create({
-      name,
-      email,
-      username,
-      password,
-      role: "admin",
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Admin created successfully",
-      data: admin,
-    });
-  } catch (error) {
-    console.error("Error while creating admin user:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to create admin user",
-      error: error.message || "Internal Server Error",
-    });
-  }
-};
-
-export const getAllUsers = async (req, res) => {};
-
-export const getUserById = async (req, res) => {};
-
-export const updateUser = async (req, res) => {};
-
-export const deleteUser = async (req, res) => {};
-
-export const login = async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    const user = await User.findOne({
-      $or: [{ email }, { username }],
-    }).select("+password");
-
+    const user = await User.findById(userId);
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         success: false,
-        message: "Email/username and password do not match",
+        message: "User not found",
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const { name, username } = req.body;
 
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Email/username and password do not match",
+    if (name) user.name = name;
+
+    if (username && username !== user.username) {
+      const usernameExists = await User.findOne({
+        username,
+        _id: { $ne: userId },
       });
-    }
 
-    // generate token
-    const token = jwt.sign(
-      { _id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
+      if (usernameExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Username already exists",
+        });
       }
-    );
 
-    user.password = undefined;
+      user.username = username;
+    }
 
-    return res
-      .cookie("token", token, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Lax",
-      })
-      .status(200)
-      .json({
-        success: true,
-        message:
-          user.role === "admin"
-            ? "Admin logged in successfully"
-            : "User logged in successfully",
-        data: { user, token },
-      });
-  } catch (error) {
-    console.error("Error while login user:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to login user",
-      error: error.message || "Internal Server Error",
-    });
-  }
-};
+    if (req.file) {
+      if (user.avatar?.publicId) {
+        await deleteFileFromCloudinary(user.avatar.publicId);
+      }
 
-export const logout = async (req, res) => {
-  try {
-    const { role } = req.user;
+      const uploadResult = await uploadFileToCloudinary(
+        req.file.path,
+        "avatars",
+      );
 
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Lax",
-      path: "/",
-    });
+      user.avatar = {
+        url: uploadResult.url,
+        publicId: uploadResult.publicId,
+      };
+    }
+
+    await user.save();
 
     return res.status(200).json({
       success: true,
-      message:
-        role === "admin"
-          ? "Admin logged out successfully"
-          : "User logged out successfully",
+      message: "Profile updated successfully",
+      data: {
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role,
+      },
     });
   } catch (error) {
-    console.error("Error while logout user:", error);
-    res.status(500).json({
+    console.error("Error while updating profile:", error);
+    return res.status(500).json({
       success: false,
-      message: "Failed to logout user",
+      message: "Failed to update profile",
+    });
+  }
+};
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const { sort = "newest", role, status, accountType, search } = req.query;
+
+    const filter = {};
+
+    if (role) filter.role = role;
+    if (status) filter.isActive = status === "active";
+    if (accountType === "google") {
+      filter.isGoogleUser = true;
+    }
+
+    if (accountType === "regular") {
+      filter.isGoogleUser = false;
+    }
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    let sortOption = { createdAt: -1 };
+
+    if (sort === "oldest") sortOption = { createdAt: 1 };
+    if (sort === "name_az") sortOption = { name: 1 };
+    if (sort === "email_az") sortOption = { email: 1 };
+
+    const users = await User.find(filter)
+      .select("-password -avatar.publicId")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const filteredUsersCount = await User.countDocuments(filter);
+
+    const [
+      totalUsers,
+      adminCount,
+      userCount,
+      googleUsersCount,
+      regularUsersCount,
+      activeUsersCount,
+      inactiveUsersCount,
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: "admin" }),
+      User.countDocuments({ role: "user" }),
+      User.countDocuments({ isGoogleUser: true }),
+      User.countDocuments({ isGoogleUser: false }),
+      User.countDocuments({ isActive: true }),
+      User.countDocuments({ isActive: false }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Users fetched successfully",
+      meta: {
+        page,
+        limit,
+        totalPages: Math.ceil(filteredUsersCount / limit),
+        filteredUsersCount,
+      },
+      analytics: {
+        totalUsers,
+        admins: adminCount,
+        users: userCount,
+        googleUsers: googleUsersCount,
+        regularUsers: regularUsersCount,
+        activeUsers: activeUsersCount,
+        inactiveUsers: inactiveUsersCount,
+      },
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error while fetching users:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch users",
       error: error.message || "Internal Server Error",
     });
   }
 };
+
+export const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select(
+      "-password -avatar.publicId",
+    );
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User fetched successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error while fetching user by id:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user by id",
+      error: error.message || "Internal Server Error",
+    });
+  }
+};
+
+export const updateUserStatus = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: `User status ${user.isActive ? "active" : "inactive"} successfully`,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error while updating user status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update user status",
+      error: error.message || "Internal Server Error",
+    });
+  }
+};
+
+export const cleanupInactiveUsers = async (req, res) => {
+  try {
+    const cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const inactiveUsers = await User.find({
+      isActive: false,
+      updatedAt: { $lte: cutoffDate },
+    });
+
+    if (inactiveUsers.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No inactive users to delete",
+      });
+    }
+
+    for (const user of inactiveUsers) {
+      await user.deleteOne();
+    }
+    return res.status(200).json({
+      success: true,
+      message: `Deleted ${inactiveUsers.length} inactive users successfully`,
+    });
+  } catch (error) {
+    console.log(`Failed while trying to delete user`, error);
+    return res.status(500).json({
+      success: false,
+      message: `Failed to delete user`,
+      error: error.message,
+    });
+  }
+};
+
+import mongoose from "mongoose";
+
+
+export const profileStats = async (req, res) => {
+  try {
+    /* ================= USER ID ================= */
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+
+    /* ================= MEMBER SINCE ================= */
+    const user = await User.findById(userId).select("createdAt");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    /* ================= BOOKS BOUGHT + PREFERRED CATEGORY ================= */
+    const ordersAgg = await Order.aggregate([
+      {
+        $match: {
+          user: userId,
+          orderStatus: { $ne: "cancelled" },
+        },
+      },
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.category",
+          booksBought: { $sum: "$items.quantity" },
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "_id",
+          foreignField: "_id",
+          as: "category",
+        },
+      },
+      { $unwind: "$category" },
+      {
+        $project: {
+          _id: 0,
+          categoryName: "$category.name",
+          booksBought: 1,
+        },
+      },
+      { $sort: { booksBought: -1 } },
+    ]);
+
+    const booksBought = ordersAgg.reduce(
+      (sum, item) => sum + item.booksBought,
+      0
+    );
+
+    const preferredCategory =
+      ordersAgg.length > 0
+        ? ordersAgg[0].categoryName
+        : "Not decided yet";
+
+    /* ================= PENDING ORDERS ================= */
+    const pendingOrders = await Order.countDocuments({
+      user: userId,
+      orderStatus: {
+        $in: ["pending", "confirmed", "processing", "shipped"],
+      },
+    });
+
+    /* ================= REVIEWS ================= */
+    const totalReviews = await Review.countDocuments({
+      user: userId,
+    });
+
+    /* ================= POINTS ================= */
+    const points =
+      booksBought * 20 +
+      totalReviews * 10;
+
+    /* ================= READING STREAK ================= */
+    const lastDeliveredOrder = await Order.findOne({
+      user: userId,
+      orderStatus: "delivered",
+    }).sort({ deliveredAt: -1 });
+
+    let readingStreak = 0;
+
+    if (lastDeliveredOrder) {
+      const lastDate = new Date(
+        lastDeliveredOrder.deliveredAt ||
+          lastDeliveredOrder.createdAt
+      );
+      const today = new Date();
+
+      const diffDays = Math.floor(
+        (today - lastDate) / (1000 * 60 * 60 * 24)
+      );
+
+      readingStreak = diffDays <= 1 ? diffDays + 1 : 0;
+    }
+
+    /* ================= RESPONSE ================= */
+    return res.status(200).json({
+      success: true,
+      data: {
+        booksBought,
+        pendingOrders,
+        totalReviews,
+        points,
+        readingStreak,
+        preferredCategory,
+        memberSince: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Error in profileStats:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile stats",
+    });
+  }
+};
+

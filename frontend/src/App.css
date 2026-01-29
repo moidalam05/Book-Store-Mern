@@ -21,10 +21,20 @@
   display: none !important;
 }
 
-
 .swiper-button-prev:after,
 .swiper-button-next:after {
   font-size: 16px !important;
 }
 
-
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  line-clamp: 1;
+}
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+}

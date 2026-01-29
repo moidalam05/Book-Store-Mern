@@ -2,68 +2,171 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
+    // 🔐 USER
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
-      trim: true,
-      minLength: [3, "Name must be at least 3 characters"],
-      maxLength: [100, "Name must be less than 100 characters"],
+      index: true,
     },
-    email: {
-      type: String,
-      required: true,
-    },
-    address: {
-      city: {
+
+    // 👤 CUSTOMER SNAPSHOT
+    customer: {
+      name: {
         type: String,
-        required: [true, "City is required"],
+        required: true,
+        trim: true,
+        minlength: 3,
       },
-      state: {
+      email: {
         type: String,
-        required: [true, "State is required"],
+        required: true,
+        lowercase: true,
+        trim: true,
       },
-      zipcode: {
+      phone: {
         type: String,
-        required: [true, "Zip code is required"],
-      },
-      country: {
-        type: String,
-        required: [true, "Country is required"],
+        required: true,
+        match: [/^\d{10}$/, "Phone must be 10 digits"],
       },
     },
 
-    phone: {
-      type: String,
-      required: true,
-      match: [/^\d{10}$/, "Phone number must be exactly 10 digits"],
+    // 📦 SHIPPING ADDRESS
+    shippingAddress: {
+      addressLine1: { type: String, required: true },
+      addressLine2: { type: String },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      pincode: { type: String, required: true },
+      country: {
+        type: String,
+        default: "India",
+      },
     },
-    productIds: [
+
+    // 🛒 ORDER ITEMS
+    items: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Book",
-        required: true,
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Book",
+          required: true,
+        },
+        coverImage: {
+          url: {
+            type: String,
+            required: true,
+          },
+        },
+        category: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Category",
+          required: true,
+        },
+
+        title: {
+          type: String,
+          required: true,
+        },
+        originalPrice: {
+          type: Number,
+          required: true,
+        },
+        discountedPrice: {
+          type: Number,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+        },
+        subtotal: {
+          type: Number,
+          required: true,
+        },
       },
     ],
-    totalPrice: {
-      type: Number,
-      required: true,
-      default: 0,
+
+    // 💰 PRICE (NO TAX, NO SHIPPING)
+    pricing: {
+      total: {
+        type: Number,
+        required: true,
+      },
+      discount: {
+        type: Number,
+        default: 0,
+      },
+      finalAmount: {
+        type: Number,
+        required: true,
+      },
     },
+
+    // 🎟️ COUPON SNAPSHOT
+    coupon: {
+      code: String,
+      couponId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Coupon",
+      },
+      discountAmount: {
+        type: Number,
+        default: 0,
+      },
+    },
+
+    // 💳 PAYMENT
+    payment: {
+      method: {
+        type: String,
+        enum: ["COD", "RAZORPAY"],
+        required: true,
+      },
+
+      status: {
+        type: String,
+        enum: ["pending", "paid", "failed", "refunded"],
+        default: "pending",
+      },
+
+      // Razorpay specific (only if online)
+      razorpay: {
+        orderId: String,
+        paymentId: String,
+        signature: String,
+        amount: Number,
+        currency: String,
+      },
+
+      paidAt: Date,
+    },
+
+    // 🚚 ORDER STATUS
     orderStatus: {
       type: String,
       enum: [
         "pending",
-        "ordered",
-        "packed",
+        "confirmed",
         "processing",
         "shipped",
         "delivered",
         "cancelled",
+        "refunded",
       ],
       default: "pending",
+      index: true,
     },
+
+    // ⏱️ TIMESTAMPS
+    cancelledAt: Date,
+    deliveredAt: Date,
   },
-  { timestamps: true, versionKey: false }
+  {
+    timestamps: true,
+    versionKey: false,
+  },
 );
 
 const Order = mongoose.model("Order", orderSchema);

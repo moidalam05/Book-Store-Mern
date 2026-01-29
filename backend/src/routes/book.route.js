@@ -1,17 +1,19 @@
 import { Router } from "express";
 import {
   createBook,
-  deleteBook,
   getAllBooks,
   getBookById,
   updateBook,
+  updateBookStatus,
 } from "../controllers/book.controller.js";
 import runValidation from "../validation/validate.js";
 import {
-  createBookValidation,
-  updateBookValidation,
+  bookIdParamValidator,
+  createBookValidator,
+  updateBookValidator,
 } from "../validation/book.validator.js";
 import { isAuthenticated, isAdmin } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.js";
 
 const router = Router();
 
@@ -20,20 +22,32 @@ router.post(
   "/create-book",
   isAuthenticated,
   isAdmin,
-  createBookValidation,
+  upload.single("coverImage"),
+  createBookValidator,
   runValidation,
   createBook
 );
+
 router.get("/", getAllBooks);
-router.get("/:bookId", getBookById);
-router.delete("/:bookId", isAuthenticated, isAdmin, deleteBook);
-router.patch(
+router.get("/:bookId", bookIdParamValidator, runValidation, getBookById);
+
+router.put(
   "/edit/:bookId",
   isAuthenticated,
   isAdmin,
-  updateBookValidation,
+  updateBookValidator,
+  bookIdParamValidator,
   runValidation,
   updateBook
+);
+
+router.patch(
+  "/:bookId",
+  isAuthenticated,
+  isAdmin,
+  bookIdParamValidator,
+  runValidation,
+  updateBookStatus
 );
 
 export default router;
