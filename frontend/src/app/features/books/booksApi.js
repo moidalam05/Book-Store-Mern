@@ -59,6 +59,16 @@ export const booksApi = createApi({
       invalidatesTags: [{ type: "Books", id: "LIST" }],
     }),
 
+    // ==================== GENERATE DESCRITION BY AI ====================
+    generateDescriptionByAi: builder.mutation({
+      query: ({title}) => ({
+        url: "/generate-description",
+        method: "POST",
+        body: { title },
+      }),
+      invalidatesTags: [{ type: "Books", id: "LIST" }],
+    }),
+
     // ==================== UPDATE BOOK ====================
     updateBook: builder.mutation({
       query: ({ id, ...updatedBook }) => ({
@@ -102,6 +112,7 @@ export const {
   useFetchAllBooksQuery,
   useFetchBookByIdQuery,
   useCreateBookMutation,
+  useGenerateDescriptionByAiMutation,
   useUpdateBookMutation,
   useDeleteBookMutation,
   useUpdateBookStatusMutation,

@@ -7,6 +7,7 @@ import {
 import { createBookSlug } from "../utils/slug.utils.js";
 import { parseArrayField } from "../utils/parseArray.js";
 import { parsePrice } from "../utils/parsePrice.js";
+import { main } from "../config/gemini.js";
 
 export const createBook = async (req, res) => {
   try {
@@ -562,3 +563,33 @@ export const cleanupInactiveBooks = async () => {
     }
   }
 };
+
+export const generateDescriptionByAI = async (req, res) => {
+  try {
+    const { title } = req.body;
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: "Title is required",
+      });
+    }
+
+    const response = await main(
+      `Generate ${title} book description in 200 to 400 characters in simple text format.`,
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Description generated successfully",
+      data: response,
+    });
+  } catch (error) {
+    console.log("Error while generating description by ai", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate description by AI",
+      error: error.message,
+    });
+  }
+};
+
+

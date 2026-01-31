@@ -21,6 +21,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@google/genai": "^1.39.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.8.0",
     "cookie-parser": "^1.4.7",

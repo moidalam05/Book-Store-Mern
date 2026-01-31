@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createBook,
+  generateDescriptionByAI,
   getAllBooks,
   getBookById,
   updateBook,
@@ -25,10 +26,13 @@ router.post(
   upload.single("coverImage"),
   createBookValidator,
   runValidation,
-  createBook
+  createBook,
 );
 
 router.get("/", getAllBooks);
+
+router.post("/generate-description", isAuthenticated, generateDescriptionByAI);
+
 router.get("/:bookId", bookIdParamValidator, runValidation, getBookById);
 
 router.put(
@@ -38,7 +42,7 @@ router.put(
   updateBookValidator,
   bookIdParamValidator,
   runValidation,
-  updateBook
+  updateBook,
 );
 
 router.patch(
@@ -47,7 +51,7 @@ router.patch(
   isAdmin,
   bookIdParamValidator,
   runValidation,
-  updateBookStatus
+  updateBookStatus,
 );
 
 export default router;

@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import {
   useFetchBookByIdQuery,
+  useGenerateDescriptionByAiMutation,
   useUpdateBookMutation,
 } from "../../../app/features/books/booksApi.js";
 import Loading from "../../../components/Loading.jsx";
@@ -35,6 +36,8 @@ const EditBook = () => {
   const { data, isLoading, refetch } = useFetchBookByIdQuery(id);
   const bookData = data?.data;
   const [updateBook, { isLoading: isUpdating }] = useUpdateBookMutation();
+  const [generateDescriptionByAi, { isLoading: isGeneratingDescription }] =
+    useGenerateDescriptionByAiMutation();
   const { data: categoryData } = useFetchAllCategoriesQuery();
   const categories = categoryData?.data || [];
 
@@ -54,19 +57,32 @@ const EditBook = () => {
   // Watch form values
   const trendingWatch = watch("trending");
   const featuredWatch = watch("featured");
+  const title = watch("title");
 
   const handleGenerateDescription = async () => {
     try {
-      toast.loading("Generating description...", { id: "ai-desc" });
-      // API CALL HERE
-      setValue("description", data.description, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: false,
+      if (!title || title.trim().length < 3) {
+        return toast.error("Please enter a book title first");
+      }
+      const generateDescriptionPromise = generateDescriptionByAi({
+        title,
+      }).unwrap();
+      toast.promise(generateDescriptionPromise, {
+        loading: "Generating description...",
+        success: (res) => {
+          setValue("description", res.data, {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          });
+          return res.message;
+        },
+        error: (err) => err?.data?.message || "Failed to generate description",
       });
-      toast.success("Description generated ✨", { id: "ai-desc" });
+
+      await generateDescriptionPromise;
     } catch (error) {
-      toast.error(err.message || "Failed to generate description", {
+      toast.error(error.message || "Failed to generate description", {
         id: "ai-desc",
       });
     }
@@ -303,11 +319,11 @@ const EditBook = () => {
                       </div>
                       <button
                         className="ml-auto px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-md hover:shadow-md transition-shadow flex items-center gap-1.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
-                        disabled={isLoading}
+                        disabled={isGeneratingDescription}
                         onClick={handleGenerateDescription}
                         type="button"
                       >
-                        {isLoading ? (
+                        {isGeneratingDescription ? (
                           <>
                             <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                             Generating...
