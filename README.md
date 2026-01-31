@@ -87,6 +87,7 @@ RAZORPAY_WEBHOOK_SECRET=your_razorpay_webhook_secret
 CLOUDINARY_API_NAME=your_cloudinary_api_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 Create a `.env` file in the `frontend` directory and add the following:
