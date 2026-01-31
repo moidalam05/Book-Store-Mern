@@ -4,12 +4,12 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./src/database/connectDB.js";
 
-// Cron
+// Cron jobs
 import "./src/cron/book.cron.js";
 import "./src/cron/user.cron.js";
 import "./src/cron/coupon.cron.js";
 
-// imports routes
+// Routes
 import bookRoute from "./src/routes/book.route.js";
 import orderRoute from "./src/routes/order.route.js";
 import userRoute from "./src/routes/user.route.js";
@@ -21,33 +21,46 @@ import cartRoute from "./src/routes/cart.route.js";
 import couponRoute from "./src/routes/coupon.route.js";
 import dashboardRoute from "./src/routes/dashboard.route.js";
 
-// webhook
+// Webhook
 import { razorpayWebhookHandler } from "./src/controllers/order.controller.js";
 
 dotenv.config();
+
 const app = express();
 
-// Cors middleware
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
+
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL || "http://localhost:5174"],
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-  }),
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
 );
 
-// Webhook
 app.post(
   "/api/webhooks/razorpay",
   express.raw({ type: "application/json" }),
-  razorpayWebhookHandler,
+  razorpayWebhookHandler
 );
 
-// Middleware configuration
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use(cookieParser());
 
-// routes
+
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/users", userRoute);
 app.use("/api/v1/dashboard", dashboardRoute);
@@ -59,13 +72,14 @@ app.use("/api/v1/addresses", addressRoute);
 app.use("/api/v1/cart", cartRoute);
 app.use("/api/v1/coupons", couponRoute);
 
-// Start the server
+const PORT = process.env.PORT || 5000;
+
 const startServer = async () => {
   try {
     await connectDB();
 
-    app.listen(process.env.PORT, () => {
-      console.log(`🚀 Server running on port ${process.env.PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   } catch (err) {
     console.error("❌ Failed to start server:", err.message);
