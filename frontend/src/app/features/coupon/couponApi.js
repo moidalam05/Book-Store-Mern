@@ -1,8 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getBaseUrl } from "../../../utils/baseUrl.js";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${getBaseUrl()}/api/v1/coupons`,
+  baseUrl: `${import.meta.env.VITE_API_URL}/api/v1/coupons`,
   credentials: "include",
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("token");

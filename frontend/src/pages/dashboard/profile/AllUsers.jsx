@@ -4,7 +4,6 @@ import {
   FiSearch,
   FiFilter,
   FiEdit,
-  FiEye,
   FiUserCheck,
   FiUserX,
   FiUser,

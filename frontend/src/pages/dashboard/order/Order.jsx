@@ -14,6 +14,7 @@ import {
 } from "../../../app/features/orders/ordersApi";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
+import Loading from "../../../components/Loading";
 
 const Order = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,7 +22,7 @@ const Order = () => {
   const [dateFilter, setDateFilter] = useState("all");
 
   // fetching orders data
-  const { data: ordersData } = useGetAllOrdersQuery({
+  const { data: ordersData, isLoading } = useGetAllOrdersQuery({
     status: statusFilter,
     date: dateFilter,
     search: searchTerm,
@@ -115,6 +116,8 @@ const Order = () => {
 
     await promise;
   };
+
+  if (isLoading) return <Loading />;
 
   return (
     <div className="min-h-screen">

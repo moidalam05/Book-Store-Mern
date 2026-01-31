@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
-import { getBaseUrl } from "../utils/baseUrl.js";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -23,11 +22,14 @@ export const AuthProvider = ({ children }) => {
 
     const fetchMe = async () => {
       try {
-        const res = await fetch(`${getBaseUrl()}/api/v1/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/v1/auth/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        });
+        );
 
         if (!res.ok) {
           throw new Error("Unauthorized");
@@ -54,15 +56,18 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
 
-    const res = await fetch(`${getBaseUrl()}/api/v1/auth/google`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: result.user.email,
-        name: result.user.displayName,
-        avatar: result.user.photoURL,
-      }),
-    });
+    const res = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/v1/auth/google`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: result.user.email,
+          name: result.user.displayName,
+          avatar: result.user.photoURL,
+        }),
+      },
+    );
 
     const data = await res.json();
 
