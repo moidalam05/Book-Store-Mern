@@ -31,6 +31,7 @@ const app = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
+  "https://moidalam-book-store.netlify.app",
 ];
 
 app.use(
@@ -47,19 +48,18 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 app.post(
   "/api/webhooks/razorpay",
   express.raw({ type: "application/json" }),
-  razorpayWebhookHandler
+  razorpayWebhookHandler,
 );
 
 app.use(express.json({ limit: "50kb" }));
 app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use(cookieParser());
-
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/users", userRoute);
