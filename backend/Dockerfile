@@ -1,11 +1,16 @@
-FROM node:24-slim
+FROM node:24-alpine
 
 WORKDIR /app
 
+# pehle sirf dependency files
 COPY package*.json ./
 
+# yahin node_modules banega (container ke andar)
+RUN npm install --omit=dev
+
+# ab actual source code
 COPY . .
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
