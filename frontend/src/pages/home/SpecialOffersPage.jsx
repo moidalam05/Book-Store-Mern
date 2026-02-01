@@ -96,16 +96,38 @@ const SpecialOffersPage = () => {
             </p>
 
             {/* Main Countdown Timer */}
-            <div>
-              <p className="text-lg mb-6 font-medium">Sale ends in:</p>
-              <div className="flex justify-center gap-4 md:gap-8">
+            <div className="px-2">
+              <p className="text-base sm:text-lg mb-3 sm:mb-6 font-medium text-center ">
+                Sale ends in:
+              </p>
+
+              {/* Mobile Horizontal Layout */}
+              <div className="sm:hidden">
+                <div className="flex items-center justify-center gap-3">
+                  {Object.entries(timeLeft).map(([unit, value]) => (
+                    <div key={unit} className="text-center flex-1">
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center mb-1 mx-auto">
+                        <span className="text-2xl font-bold">
+                          {value.toString().padStart(2, "0")}
+                        </span>
+                        <span className="text-xs uppercase tracking-wider mt-1">
+                          {unit}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop/Tabler Layout */}
+              <div className="hidden sm:flex justify-center gap-3 md:gap-4 lg:gap-8">
                 {Object.entries(timeLeft).map(([unit, value]) => (
                   <div key={unit} className="text-center">
-                    <div className="w-20 h-20 md:w-24 md:h-24 bg-white/20 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center mb-2">
-                      <span className="text-3xl md:text-4xl font-bold">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white/20 backdrop-blur-sm rounded-xl md:rounded-2xl flex flex-col items-center justify-center mb-2">
+                      <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
                         {value.toString().padStart(2, "0")}
                       </span>
-                      <span className="text-sm uppercase tracking-wider mt-1">
+                      <span className="text-xs sm:text-sm uppercase tracking-wider mt-1">
                         {unit}
                       </span>
                     </div>

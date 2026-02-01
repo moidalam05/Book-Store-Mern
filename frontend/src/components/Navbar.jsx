@@ -33,7 +33,6 @@ const Navbar = () => {
   const { currentUser, logout } = useAuth();
 
   const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: <HiMiniBars3CenterLeft /> },
     { name: "My Profile", href: "/profile", icon: <HiOutlineUser /> },
     { name: "My Addresses", href: "/addresses", icon: <FiHome /> },
     { name: "My Orders", href: "/orders", icon: <HiOutlineShoppingBag /> },
@@ -208,6 +207,17 @@ const Navbar = () => {
                         </div>
 
                         <div className="py-2">
+                          {currentUser?.role === "admin" && (
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-indigo-600 hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="text-gray-400">
+                                <HiMiniBars3CenterLeft />
+                              </span>
+                              Dashboard
+                            </Link>
+                          )}
                           {navigation.map((item) => (
                             <Link
                               key={item.name}
