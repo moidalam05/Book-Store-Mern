@@ -684,7 +684,7 @@ const Address = () => {
             </div>
 
             {/* Address List */}
-            <div className="space-y-4 lg:max-h-[670px] lg:overflow-y-auto pr-2">
+            <div className="space-y-4 lg:max-h-167.5 lg:overflow-y-auto pr-2">
               {filteredAddresses.length > 0 ? (
                 filteredAddresses.map((address) => (
                   <div

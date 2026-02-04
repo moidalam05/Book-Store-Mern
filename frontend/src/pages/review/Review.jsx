@@ -189,7 +189,7 @@ const Review = ({ bookId }) => {
         </div>
 
         {/* Average Rating - Responsive */}
-        <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 md:p-6 w-full lg:w-auto lg:min-w-[280px]">
+        <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 md:p-6 w-full lg:w-auto lg:min-w-70">
           <div className="flex items-center justify-between mb-2 md:mb-3">
             <div className="text-3xl md:text-5xl font-bold text-gray-900">
               {reviewData?.meta?.averageRating}/5

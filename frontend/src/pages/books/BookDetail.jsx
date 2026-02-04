@@ -98,7 +98,7 @@ const BookDetail = () => {
               <img
                 src={book?.coverImage?.url}
                 alt={book.title}
-                className="w-full h-auto max-h-[400px] object-contain mx-auto"
+                className="w-full h-auto max-h-100 object-contain mx-auto"
               />
             </div>
           </div>
@@ -184,7 +184,7 @@ const BookDetail = () => {
                   >
                     -
                   </button>
-                  <span className="px-4 py-2 border-x border-gray-300 min-w-[60px] text-center font-medium">
+                  <span className="px-4 py-2 border-x border-gray-300 min-w-15 text-center font-medium">
                     {quantity}
                   </span>
                   <button
@@ -609,7 +609,7 @@ const BookDetail = () => {
                       >
                         -
                       </button>
-                      <span className="px-4 py-2 border-x border-gray-300 min-w-[60px] text-center font-medium">
+                      <span className="px-4 py-2 border-x border-gray-300 min-w-15 text-center font-medium">
                         {quantity}
                       </span>
                       <button

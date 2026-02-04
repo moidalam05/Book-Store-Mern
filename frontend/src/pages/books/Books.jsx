@@ -133,7 +133,7 @@ const Books = () => {
           {/* Main Content Area */}
           <div className="flex-1">
             {/* Toolbar */}
-            <div className="bg-linear-to-r from-gray-50 to-white border-b border-gray-200 border-l p-[15px] mb-6">
+            <div className="bg-linear-to-r from-gray-50 to-white border-b border-gray-200 border-l p-3.75 mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 {/* Results Info */}
                 <div className="flex items-center gap-4">
@@ -173,7 +173,7 @@ const Books = () => {
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="appearance-none bg-white border border-gray-300 rounded-xl px-4 py-2.5 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer min-w-[180px]"
+                      className="appearance-none bg-white border border-gray-300 rounded-xl px-4 py-2.5 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none cursor-pointer min-w-45"
                     >
                       <option value="">Sort By</option>
                       {sortOptions.map((option) => (
