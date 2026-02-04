@@ -4,5 +4,4 @@ dist
 .gitignore
 *.log
 coverage
-.env
 npm-debug.log
