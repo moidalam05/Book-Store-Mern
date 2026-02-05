@@ -3,18 +3,18 @@ version: "3.9"
 services:
   backend:
     build: ./backend
-    container_name: backend
-    ports:
-      - "5000:5000"
+    container_name: bookstore-backend
     env_file:
       - ./backend/.env
+    ports:
+      - "127.0.0.1:5000:5000"
     restart: unless-stopped
 
   frontend:
     build: ./frontend
-    container_name: frontend
+    container_name: bookstore-frontend
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       - backend
     restart: unless-stopped
