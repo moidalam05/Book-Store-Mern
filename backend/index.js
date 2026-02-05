@@ -32,6 +32,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://moidalam-book-store.netlify.app",
+  "https://bookstore.moidalam.in"
 ];
 
 app.use(
