@@ -263,8 +263,8 @@ const DashboardLayout = () => {
             <div className={`${isSidebarOpen ? "lg:block" : "lg:hidden"}`}>
               <h2 className="text-gray-900 font-bold text-lg">BookStore</h2>
               <p className="text-gray-500 text-xs">Admin Panel</p>
-            </Link>
-          </div>
+            </div>
+          </Link>
 
           {/* Toggle Button - Desktop */}
           <button
