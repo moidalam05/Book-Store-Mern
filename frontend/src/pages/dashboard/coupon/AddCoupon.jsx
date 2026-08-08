@@ -183,7 +183,7 @@ const AddCoupon = () => {
 
       {/* Main Content */}
       <div className="py-8">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto">
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Coupon Details */}
