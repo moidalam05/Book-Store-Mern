@@ -20,7 +20,6 @@ const Recommended = () => {
   const [activeFilter, setActiveFilter] = useState("trending");
 
   const { data: bookData } = useFetchAllBooksQuery({
-    sortBy: activeFilter,
   });
   const books = bookData?.data || [];
 
