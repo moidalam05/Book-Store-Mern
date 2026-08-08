@@ -257,13 +257,13 @@ const DashboardLayout = () => {
           <div
             className={`flex items-center space-x-3 ${isSidebarOpen ? "lg:flex" : "hidden lg:flex"}`}
           >
-            <div className="w-10 h-10 bg-linear-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+            <Link to="/" className="w-10 h-10 bg-linear-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-xl">B</span>
             </div>
             <div className={`${isSidebarOpen ? "lg:block" : "lg:hidden"}`}>
               <h2 className="text-gray-900 font-bold text-lg">BookStore</h2>
               <p className="text-gray-500 text-xs">Admin Panel</p>
-            </div>
+            </Link>
           </div>
 
           {/* Toggle Button - Desktop */}
