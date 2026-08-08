@@ -193,7 +193,7 @@ const EditProfile = () => {
 
   return (
     <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto">
         {/* Header Section */}
         <div className="mb-10">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
