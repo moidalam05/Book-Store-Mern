@@ -40,6 +40,7 @@ const ManageBooks = () => {
   } = useFetchAllBooksQuery({
     category: selectedCategory === "all" ? undefined : selectedCategory,
     search: searchTerm,
+    sortBy: "featured"
   });
   const books = booksData?.data || [];
 
