@@ -14,7 +14,8 @@ const TopSellers = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const { data: bookData } = useFetchAllBooksQuery({
-    category: selectedCategory === "all" ? undefined : selectedCategory,
+    sortBy: "newest",
+    category: selectedCategory === "all" ? undefined : selectedCategory
   });
   const books = bookData?.data || [];
 
