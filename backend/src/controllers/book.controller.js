@@ -247,11 +247,9 @@ export const getAllBooks = async (req, res) => {
     }
 
     // ================= NEW RELEASES (30 DAYS) =================
-    if (newRelease === "true" || sortBy === "newest") {
-      const last30Days = new Date();
-      last30Days.setDate(last30Days.getDate() - 30);
-      query.createdAt = { $gte: last30Days };
-    }
+  if (newRelease === "true" || sortBy === "newest") {
+  sort = { createdAt: -1 };
+}
 
     // ================= RATING FILTER =================
     if (req.query.rating || sortBy === "topRated" || topRated === "true") {
