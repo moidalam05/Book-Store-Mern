@@ -22,7 +22,6 @@ const NewReleasesPage = ({ scrollToSubscribe }) => {
 
   const { data: bookData } = useFetchAllBooksQuery({
     category: selectedCategory === "all" ? undefined : selectedCategory,
-    sortBy: sortBy,
   });
   const books = bookData?.data || [];
 
