@@ -254,10 +254,10 @@ const DashboardLayout = () => {
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-20 px-4 border-b border-gray-200">
-          <div
+          <Link to="/"
             className={`flex items-center space-x-3 ${isSidebarOpen ? "lg:flex" : "hidden lg:flex"}`}
           >
-            <Link to="/" className="w-10 h-10 bg-linear-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 bg-linear-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-xl">B</span>
             </div>
             <div className={`${isSidebarOpen ? "lg:block" : "lg:hidden"}`}>
