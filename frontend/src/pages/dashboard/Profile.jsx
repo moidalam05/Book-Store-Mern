@@ -28,7 +28,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto py-8">
+      <div className="mx-auto py-8">
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
