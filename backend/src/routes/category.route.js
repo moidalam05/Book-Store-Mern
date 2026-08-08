@@ -26,7 +26,7 @@ router.post(
   createCategory,
 );
 
-router.get("/", isAuthenticated, getAllCategories);
+router.get("/", getAllCategories);
 
 router.get(
   "/:categoryId",
