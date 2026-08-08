@@ -39,7 +39,6 @@ const ManageBooks = () => {
     isLoading,
   } = useFetchAllBooksQuery({
     category: selectedCategory === "all" ? undefined : selectedCategory,
-    sortBy: sortBy,
     search: searchTerm,
   });
   const books = booksData?.data || [];
