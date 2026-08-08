@@ -209,7 +209,7 @@ const EditBook = () => {
 
   return (
     <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
