@@ -21,7 +21,6 @@ const NewReleasesPage = ({ scrollToSubscribe }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const { data: bookData } = useFetchAllBooksQuery({
-    newRelease: true,
     category: selectedCategory === "all" ? undefined : selectedCategory,
     sortBy: sortBy,
   });
